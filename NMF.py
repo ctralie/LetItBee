@@ -10,6 +10,8 @@ import scipy.io as sio
 import scipy.ndimage
 import matplotlib.pyplot as plt
 import time
+import librosa
+import librosa.display
 
 def getKLError(V, WH, eps = 1e-10):
     """
@@ -32,16 +34,14 @@ def plotNMFSpectra(V, W, H, iter, errs, hopLength = -1):
     :param errs: Convergence errors
     :param hopLength: The hop length (for plotting)
     """
-    import librosa
-    import librosa.display
-    plt.subplot(151)
+    plt.subplot(221)
     if hopLength > -1:
         librosa.display.specshow(librosa.amplitude_to_db(V), hop_length = hopLength, \
                                 y_axis = 'log', x_axis = 'time')
     else:
         plt.imshow(V, cmap = 'afmhot', interpolation = 'none', aspect = 'auto')
     plt.title("V")
-    plt.subplot(152)
+    plt.subplot(223)
     WH = W.dot(H)
     if hopLength > -1:
         librosa.display.specshow(librosa.amplitude_to_db(WH), hop_length = hopLength, \
@@ -49,23 +49,27 @@ def plotNMFSpectra(V, W, H, iter, errs, hopLength = -1):
     else:
         plt.imshow(WH, cmap = 'afmhot', interpolation = 'none', aspect = 'auto')
     plt.title("W*H Iteration %i"%iter)  
-    plt.subplot(153)
+    plt.subplot(222)
+    plt.imshow(np.log(H + np.min(H[H > 0])), cmap = 'afmhot', interpolation = 'none', aspect = 'auto')
+    plt.title("H Iteration %i"%iter)
+    plt.subplot(224)
+    errs = np.array(errs)
+    errs[0] = errs[1]
+    plt.semilogy(errs)
+    plt.ylim([0.7*np.min(errs[errs > 0]), 1.3*np.max(errs[1::])])
+    plt.title("KL Errors")
+    plt.xlabel("Iteration")
+    plt.tight_layout()
+
+def plotInitialW(W, hopLength = -1):
     if hopLength > -1:
         librosa.display.specshow(librosa.amplitude_to_db(W), hop_length = hopLength, \
                                     y_axis = 'log', x_axis = 'time')        
     else:
         plt.imshow(W, cmap = 'afmhot', interpolation = 'none', aspect = 'auto')
     plt.title("W")
-    plt.subplot(154)
-    plt.imshow(np.log(H + np.min(H[H > 0])), cmap = 'afmhot', interpolation = 'none', aspect = 'auto')
-    plt.title("H Iteration %i"%iter)
-    plt.subplot(155)
-    plt.semilogy(np.array(errs[1::]))
-    plt.ylim([0.9*np.min(errs), 1.1*np.max(errs[1::])])
-    plt.title("KL Errors")
-    plt.xlabel("Iteration")     
 
-def doNMFDriedger(V, W, L, r = 7, p = 10, c = 3, plotfn = None):
+def doNMFDriedger(V, W, L, r = 7, p = 10, c = 3, plotfn = None, plotfnw = None):
     """
     Implement the technique from "Let It Bee-Towards NMF-Inspired
     Audio Mosaicing"
@@ -84,10 +88,15 @@ def doNMFDriedger(V, W, L, r = 7, p = 10, c = 3, plotfn = None):
     H = np.random.rand(K, N)
     print("H.shape = ", H.shape)
     print("Time elapsed H initializing: %.3g"%(time.time() - tic))
-    errs = [getKLError(V, W.dot(H))]
+    errs = np.zeros(L+1)
+    errs[0] = getKLError(V, W.dot(H))
+    if plotfnw:
+        plt.figure(figsize=(12, 3))
+        plotfnw(W)
+        plt.savefig("Driedger_W.svg", bbox_inches='tight')
     if plotfn:
         res=4
-        plt.figure(figsize=(res*5, res))
+        plt.figure(figsize=(res*2, res*2))
     for l in range(L):
         print("NMF Driedger iteration %i of %i"%(l+1, L))   
         iterfac = 1-float(l+1)/L       
@@ -122,7 +131,7 @@ def doNMFDriedger(V, W, L, r = 7, p = 10, c = 3, plotfn = None):
         WDenom[WDenom == 0] = 1
         H = H*((W.T).dot(VLam)/WDenom[:, None])
         print("Elapsed Time H Update %.3g"%(time.time() - tic))
-        errs.append(getKLError(V, W.dot(H)))
+        errs[l+1] = getKLError(V, W.dot(H))
         #Output plots every 20 iterations
         if plotfn and ((l+1)==L or (l+1)%20 == 0):
             plt.clf()

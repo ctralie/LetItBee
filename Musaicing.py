@@ -33,9 +33,11 @@ def doMusaicing(source, target, result, sr = 22050, winSize = 2048, hopSize = 10
     X, sr = librosa.load(target, sr=sr)
     V = np.abs(STFT(X, winSize, hopSize))
     fn = None
+    fnw = None
     if savePlots:
         fn = lambda V, W, H, iter, errs: plotNMFSpectra(V, W, H, iter, errs, hopSize)
-    H = doNMFDriedger(V, W, NIters, r=r, p=p, c=c, plotfn=fn)
+        fnw = lambda W: plotInitialW(W, hopSize)
+    H = doNMFDriedger(V, W, NIters, r=r, p=p, c=c, plotfn=fn, plotfnw = fnw)
     H = np.array(H, dtype=np.complex)
     V2 = WComplex.dot(H)
     print("Doing phase retrieval...")
