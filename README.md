@@ -25,7 +25,7 @@ python Musaicing.py --source Bees_Buzzing.mp3 --target Beatles_LetItBe.mp3 --res
 
 The audio result is as follows:
 
-![](result.mp3)
+![Result](result.mp3)
 
 Below shows a plot of the iterations and final spectrogram decomposition
 
@@ -34,7 +34,7 @@ Below shows a plot of the iterations and final spectrogram decomposition
 Notice that the KL error does not monotonically decrease and starts to go up towards the end, but this is consistent with the choices made in [1] to preserve timbral characteristics of the source.
 
 
-[1]: <https://www.audiolabs-erlangen.de/content/resources/MIR/00-2015-ISMIR-LetItBee/2015_DriedgerPM_AudioMosaicingNMF_ISMIR.pdf>
+[ [1] ]: <https://www.audiolabs-erlangen.de/content/resources/MIR/00-2015-ISMIR-LetItBee/2015_DriedgerPM_AudioMosaicingNMF_ISMIR.pdf>
 [librosa]: <http://librosa.github.io/>
 [Rubberband Library]: <https://github.com/bmcfee/pyrubberband>
 [supporting web site]: <https://www.audiolabs-erlangen.de/resources/MIR/2015-ISMIR-LetItBee/>
