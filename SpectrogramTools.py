@@ -1,7 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import scipy.interpolate
-from scipy.io import wavfile
 import pyrubberband as pyrb
 
 halfsine = lambda W: np.sin(np.pi*np.arange(W)/float(W))
@@ -24,7 +21,7 @@ def STFT(X, W, H, winfunc = None, useLibrosa = True):
         winfunc = halfsine
     win = winfunc(W)
     NWin = int(np.floor((X.size - W)/float(H)) + 1)
-    S = np.zeros((W, NWin), dtype = np.complex)
+    S = np.zeros((W, NWin), dtype = complex)
     for i in range(NWin):
         S[:, i] = np.fft.fft(win*X[np.arange(W) + (i-1)*H])
     #Second half of the spectrum is redundant for real signals
@@ -48,7 +45,7 @@ def iSTFT(pS, W, H, winfunc = None, useLibrosa = True):
         import librosa
         return librosa.core.istft(pS, hop_length = H, window = 'blackman')
     #First put back the entire redundant STFT
-    S = np.array(pS, dtype = np.complex)
+    S = np.array(pS, dtype = complex)
     if W%2 == 0:
         #Even Case
         S = np.concatenate((S, np.flipud(np.conj(S[1:-1, :]))), 0)
@@ -58,7 +55,7 @@ def iSTFT(pS, W, H, winfunc = None, useLibrosa = True):
     
     #Figure out how long the reconstructed signal actually is
     N = W + H*(S.shape[1] - 1)
-    X = np.zeros(N, dtype = np.complex)
+    X = np.zeros(N, dtype = complex)
     
     #Setup the window
     Q = W/H;
@@ -95,7 +92,7 @@ def getPitchShiftedSpecs(X, Fs, W, H, shiftrange = 6, GapWins = 10):
         else:
             Y = pyrb.pitch_shift(X, Fs, shift)
         S = STFT(Y, W, H)
-        Gap = np.zeros((S.shape[0], GapWins), dtype=np.complex)
+        Gap = np.zeros((S.shape[0], GapWins), dtype=complex)
         if SRet.size == 0:
             SRet = S
         else:
@@ -115,7 +112,7 @@ def griffinLimInverse(S, W, H, NIters = 10, winfunc = None):
     eps = 2.2204e-16
     if not winfunc:
         winfunc = halfsine
-    A = np.array(S, dtype = np.complex)
+    A = np.array(S, dtype = complex)
     for i in range(NIters):
         print("Iteration %i of %i"%(i+1, NIters))
         A = STFT(iSTFT(A, W, H, winfunc), W, H, winfunc)
